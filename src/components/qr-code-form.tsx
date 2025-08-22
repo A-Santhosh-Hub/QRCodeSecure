@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import QRCode from 'qrcode';
 import { format } from 'date-fns';
-import { CalendarIcon, Download, Loader2, User, Mail, Phone, GraduationCap, Briefcase, Users, Info, HeartPulse, Flag, Building, MapPin, NotebookText } from 'lucide-react';
+import { CalendarIcon, Download, Loader2, User, Mail, Phone, GraduationCap, Briefcase, Users, Info, HeartPulse, Flag, Building, MapPin, NotebookText, KeyRound } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,6 +30,7 @@ const formSchema = z.object({
   gender: z.enum(["Male", "Female", "Other"], { required_error: "Please select a gender." }),
   bloodGroup: z.string().optional(),
   nationality: z.string().min(2, "Nationality is required"),
+  password: z.string().min(6, "Password must be at least 6 characters."),
   mobileNumber: z.string().regex(/^\+?[1-9]\d{9,14}$/, "Please enter a valid mobile number."),
   email: z.string().email("Please enter a valid email address."),
   address: z.string().min(5, "Address is required."),
@@ -48,6 +49,7 @@ type FormData = z.infer<typeof formSchema>;
 
 const formSections = [
     { value: "personal", label: "Personal", icon: User },
+    { value: "security", label: "Security", icon: KeyRound },
     { value: "contact", label: "Contact", icon: Phone },
     { value: "academic", label: "Academic", icon: GraduationCap },
     { value: "family", label: "Family", icon: Users },
@@ -65,6 +67,7 @@ export function QRCodeForm() {
     defaultValues: {
       fullName: "",
       nationality: "Indian",
+      password: "",
       mobileNumber: "",
       email: "",
       address: "",
@@ -104,7 +107,8 @@ export function QRCodeForm() {
   };
 
   const formatDataToString = (data: FormData): string => {
-    return `Full Name: ${data.fullName}
+    return `Password: ${data.password}
+Full Name: ${data.fullName}
 Roll Number: ${data.rollNumber}
 Date of Birth: ${format(data.dob, "PPP")}
 Gender: ${data.gender}
@@ -167,7 +171,7 @@ Additional Info: ${data.otherInfo || 'N/A'}`;
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <Tabs defaultValue="personal" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 h-auto">
+                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6 h-auto">
                     {formSections.map((section) => (
                          <TabsTrigger key={section.value} value={section.value} className="flex-col sm:flex-row gap-2 h-auto py-2">
                             <section.icon className="h-5 w-5"/>
@@ -233,6 +237,17 @@ Additional Info: ${data.otherInfo || 'N/A'}`;
                       <FormItem>
                         <FormLabel>Nationality *</FormLabel>
                         <FormControl><Input placeholder="Indian" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </div>
+                </TabsContent>
+                <TabsContent value="security">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <FormField control={form.control} name="password" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password *</FormLabel>
+                        <FormControl><Input type="password" placeholder="Enter a secure password" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />

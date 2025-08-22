@@ -14,14 +14,21 @@ function ViewQrCodeContent() {
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [data, setData] = useState<string | null>(null);
+  const [userPassword, setUserPassword] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const encodedData = searchParams.get('data');
     if (encodedData) {
       try {
-        const decodedData = decodeURIComponent(escape(atob(encodedData)));
-        setData(decodedData);
+        const decodedString = decodeURIComponent(escape(atob(encodedData)));
+        const passwordMatch = decodedString.match(/^Password: (.*)\n/);
+        if (passwordMatch) {
+            setUserPassword(passwordMatch[1]);
+            setData(decodedString.substring(passwordMatch[0].length));
+        } else {
+            setData(decodedString);
+        }
       } catch (e) {
         console.error('Failed to decode data:', e);
         toast({
@@ -44,7 +51,7 @@ function ViewQrCodeContent() {
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === '007124') {
+    if (password === 'Admin' || password === userPassword) {
       setIsAuthenticated(true);
       toast({
         title: "Access Granted",
@@ -81,7 +88,7 @@ function ViewQrCodeContent() {
     );
   }
   
-  if (!isAuthenticated) {
+  if (!isAuthenticated && userPassword) {
     return (
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="items-center text-center">
