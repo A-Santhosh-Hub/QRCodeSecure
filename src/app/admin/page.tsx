@@ -4,13 +4,26 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShieldCheck, LayoutDashboard, LogOut } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { ShieldCheck, LogOut, Trash2, Pencil, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { formTemplates as initialFormTemplates, FormType } from '@/lib/form-config';
 
 const ADMIN_PASSWORD = '1922K1396s*';
 
 function AdminDashboard({ onLogout }: { onLogout: () => void }) {
+  const [formTemplates, setFormTemplates] = useState(initialFormTemplates);
+  const { toast } = useToast();
+
+  const handleDelete = (formValue: FormType) => {
+    setFormTemplates(currentTemplates => currentTemplates.filter(template => template.value !== formValue));
+    toast({
+        title: "Form Deleted",
+        description: `The form template has been successfully deleted.`,
+    });
+  };
+
   return (
     <div className="w-full max-w-4xl">
         <div className="flex justify-between items-center mb-6">
@@ -21,15 +34,62 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             </Button>
         </div>
         <Card>
-            <CardHeader>
-                <CardTitle>Form Management</CardTitle>
-                <CardDescription>
-                    Here you can add, edit, or delete form templates. This functionality is under construction.
-                </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle>Form Management</CardTitle>
+                    <CardDescription>
+                        Add, edit, or delete form templates.
+                    </CardDescription>
+                </div>
+                <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add New Form
+                </Button>
             </CardHeader>
             <CardContent>
-                <div className="flex justify-center items-center h-48 bg-muted rounded-md">
-                    <p className="text-muted-foreground">Admin controls for form management will be here.</p>
+                <div className="border rounded-md">
+                    <ul className="divide-y">
+                        {formTemplates.map((template) => (
+                            <li key={template.value} className="flex items-center justify-between p-4 hover:bg-muted/50">
+                                <div className="flex items-center gap-4">
+                                    <template.icon className="h-6 w-6 text-primary" />
+                                    <span className="font-medium">{template.label}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button variant="ghost" size="icon" disabled>
+                                        <Pencil className="h-4 w-4" />
+                                        <span className="sr-only">Edit</span>
+                                    </Button>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                                <Trash2 className="h-4 w-4" />
+                                                <span className="sr-only">Delete</span>
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This action cannot be undone. This will permanently delete the form template.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDelete(template.value as FormType)} className="bg-destructive hover:bg-destructive/90">
+                                                    Delete
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+
+                                </div>
+                            </li>
+                        ))}
+                         {formTemplates.length === 0 && (
+                            <li className="p-4 text-center text-muted-foreground">No form templates found.</li>
+                         )}
+                    </ul>
                 </div>
             </CardContent>
         </Card>
