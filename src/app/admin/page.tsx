@@ -5,15 +5,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ShieldCheck, LogOut, Trash2, Pencil, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { formTemplates as initialFormTemplates, FormType } from '@/lib/form-config';
+import { Label } from '@/components/ui/label';
 
 const ADMIN_PASSWORD = '1922K1396s*';
 
 function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [formTemplates, setFormTemplates] = useState(initialFormTemplates);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const handleDelete = (formValue: FormType) => {
@@ -23,6 +26,35 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         description: `The form template has been successfully deleted.`,
     });
   };
+
+  const handleAddForm = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const label = formData.get('formLabel') as string;
+    const value = formData.get('formValue') as string;
+
+    if (!label || !value) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Please fill out all fields.' });
+        return;
+    }
+
+    if (formTemplates.some(t => t.value === value)) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Form ID must be unique.' });
+        return;
+    }
+
+    // In a real app, you'd have a more robust way to define a new form's schema and fields.
+    // For now, we'll just add the template to the list.
+    const newTemplate = {
+        value: value as FormType, // This is a simplification
+        label: label,
+        icon: PlusCircle, // Default icon
+    };
+
+    setFormTemplates(current => [...current, newTemplate]);
+    toast({ title: "Form Added", description: `"${label}" has been created.`});
+    setIsAddDialogOpen(false);
+  }
 
   return (
     <div className="w-full max-w-4xl">
@@ -41,10 +73,37 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                         Add, edit, or delete form templates.
                     </CardDescription>
                 </div>
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add New Form
-                </Button>
+                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Add New Form
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Add New Form Template</DialogTitle>
+                            <DialogDescription>
+                                Create a new form. For now, this will create a placeholder form. A full form builder is coming soon.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleAddForm}>
+                            <div className="grid gap-4 py-4">
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="formLabel" className="text-right">Label</Label>
+                                    <Input id="formLabel" name="formLabel" placeholder="e.g. Feedback Form" className="col-span-3" />
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="formValue" className="text-right">Form ID</Label>
+                                    <Input id="formValue" name="formValue" placeholder="e.g. feedbackForm" className="col-span-3" />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button type="submit">Create Form</Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </CardHeader>
             <CardContent>
                 <div className="border rounded-md">
@@ -62,7 +121,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                                     </Button>
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" disabled={template.value === 'studentBio' || template.value === 'jobApplication' || template.value === 'eventRegistration' || template.value === 'contactForm' || template.value === 'collegeAdmission'}>
                                                 <Trash2 className="h-4 w-4" />
                                                 <span className="sr-only">Delete</span>
                                             </Button>
