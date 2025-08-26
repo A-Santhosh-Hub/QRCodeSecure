@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useForm, FieldErrors, UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,13 +17,20 @@ import { Calendar } from '@/components/ui/calendar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { getSummary } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { formTemplates, formSchemas, defaultValues, formFieldsConfig, FormType, FormData } from '@/lib/form-config';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Label } from '@/components/ui/label';
 
 
 const renderFormField = (field: any, form: UseFormReturn<any>) => {
@@ -72,19 +79,22 @@ const renderFormField = (field: any, form: UseFormReturn<any>) => {
 }
 
 export function QRCodeForm() {
-  const [activeTab, setActiveTab] = useState<FormType>("studentBio");
+  const [activeFormType, setActiveFormType] = useState<FormType>("studentBio");
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [summaryInfo, setSummaryInfo] = useState<{ summary: string, values: any } | null>(null);
   const { toast } = useToast();
 
-  const currentSchema = useMemo(() => formSchemas[activeTab], [activeTab]);
+  const currentSchema = useMemo(() => formSchemas[activeFormType], [activeFormType]);
   
   const form = useForm({
     resolver: zodResolver(currentSchema),
-    defaultValues: useMemo(() => defaultValues[activeTab], [activeTab]),
-    key: activeTab, // Re-mounts the form on tab change
+    defaultValues: useMemo(() => defaultValues[activeFormType], [activeFormType]),
   });
+
+  useEffect(() => {
+    form.reset(defaultValues[activeFormType]);
+  }, [activeFormType, form]);
   
 
   const generateAndSaveQRCode = async (data: string, values: FormData) => {
@@ -146,12 +156,12 @@ export function QRCodeForm() {
   const onSubmit = async (values: FormData) => {
     setIsLoading(true);
     setQrCodeUrl(null);
-    const formattedData = formatDataToString(values);
+    const formattedData = formatDataToString({ ...values, formType: activeFormType });
     
     if (formattedData.length > 2000) {
         const result = await getSummary(formattedData);
         if (result.success && result.data) {
-            setSummaryInfo({ summary: result.data.summary, values });
+            setSummaryInfo({ summary: result.data.summary, values: { ...values, formType: activeFormType } });
         } else {
             toast({
                 variant: "destructive",
@@ -161,7 +171,7 @@ export function QRCodeForm() {
             setIsLoading(false);
         }
     } else {
-        await generateAndSaveQRCode(formattedData, values);
+        await generateAndSaveQRCode(formattedData, { ...values, formType: activeFormType });
     }
     
     setIsLoading(false);
@@ -180,7 +190,7 @@ export function QRCodeForm() {
     if (!qrCodeUrl) return;
     const link = document.createElement('a');
     link.href = qrCodeUrl;
-    link.download = `${activeTab}-QRCodeSecure.png`;
+    link.download = `${activeFormType}-QRCodeSecure.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -189,35 +199,41 @@ export function QRCodeForm() {
   return (
     <>
       <Card className="w-full max-w-4xl mx-auto shadow-lg">
-        <CardContent className="p-0">
-          <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as FormType)} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 h-auto">
-              {formTemplates.map((template) => (
-                <TabsTrigger key={template.value} value={template.value} className="flex-col sm:flex-row gap-2 h-auto py-2">
-                  <template.icon className="h-5 w-5"/>
-                  <span>{template.label}</span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            <div className="p-6">
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit, onFormError)} className="space-y-8">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {formFieldsConfig[activeTab].map((field) => (
-                        <div key={field.name} className={field.span ? 'md:col-span-2' : ''}>
-                            {renderFormField(field, form)}
-                        </div>
-                    ))}
-                  </div>
-                  <div className="flex justify-end pt-4">
-                    <Button type="submit" disabled={isLoading} size="lg">
-                      {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</> : 'Generate QR Code'}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
+        <CardContent className="p-6">
+            <div className="mb-6">
+              <Label>Select Form Template</Label>
+              <Select onValueChange={(value) => setActiveFormType(value as FormType)} defaultValue={activeFormType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a form template" />
+                </SelectTrigger>
+                <SelectContent>
+                  {formTemplates.map((template) => (
+                    <SelectItem key={template.value} value={template.value}>
+                      <div className="flex items-center gap-2">
+                        <template.icon className="h-5 w-5"/>
+                        <span>{template.label}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </Tabs>
+            <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit, onFormError)} className="space-y-8">
+                <div className="grid md:grid-cols-2 gap-6">
+                {formFieldsConfig[activeFormType].map((field) => (
+                    <div key={field.name} className={field.span ? 'md:col-span-2' : ''}>
+                        {renderFormField(field, form)}
+                    </div>
+                ))}
+                </div>
+                <div className="flex justify-end pt-4">
+                <Button type="submit" disabled={isLoading} size="lg">
+                    {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</> : 'Generate QR Code'}
+                </Button>
+                </div>
+            </form>
+            </Form>
         </CardContent>
       </Card>
       
