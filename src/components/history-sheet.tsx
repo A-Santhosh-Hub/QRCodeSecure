@@ -11,7 +11,7 @@ interface HistoryItem {
   id: string;
   timestamp: string;
   qrCodeUrl: string;
-  formData: Record<string, any>;
+  formData: Record<string, any> & { formType: string; fullName?: string, name?: string };
 }
 
 export function HistorySheet() {
@@ -26,6 +26,22 @@ export function HistorySheet() {
         setHistory(JSON.parse(storedHistory));
       }
     }
+  }, []);
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+        const storedHistory = localStorage.getItem('qrCodeHistory');
+        if (storedHistory) {
+            setHistory(JSON.parse(storedHistory));
+        } else {
+            setHistory([]);
+        }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+        window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
   
   const clearHistory = () => {
@@ -66,12 +82,14 @@ export function HistorySheet() {
                     <div className="flex-shrink-0">
                        <Image src={item.qrCodeUrl} alt="QR Code" width={100} height={100} data-ai-hint="qrcode"/>
                     </div>
-                    <div className="flex-grow">
-                      <p className="font-semibold">{item.formData.fullName}</p>
+                    <div className="flex-grow overflow-hidden">
+                      <p className="font-semibold truncate">{item.formData.fullName || item.formData.name || "Untitled"}</p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(item.timestamp).toLocaleString()}
                       </p>
-                      <p className="text-xs mt-2 truncate">Roll No: {item.formData.rollNumber}</p>
+                       <p className="text-xs mt-2 text-primary/80 font-medium capitalize">
+                        {item.formData.formType?.replace(/([A-Z])/g, ' $1').trim() || "Form"}
+                       </p>
                     </div>
                   </div>
                 </div>

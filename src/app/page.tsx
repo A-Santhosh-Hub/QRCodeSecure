@@ -15,8 +15,8 @@ export default function Home() {
             <h1 className="font-headline text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-primary">
               QRCode<span className="text-accent-foreground">Secure</span>
             </h1>
-            <p className="mt-4 text-lg text-foreground/80 max-w-2xl mx-auto">
-              Fill out the form to generate a secure, password-protected QR code with your details. All fields marked with * are required.
+            <p className="mt-4 text-lg text-foreground/80 max-w-3xl mx-auto">
+              Select a form template, fill out the details, and generate a secure, password-protected QR code. All fields marked with * are required.
             </p>
           </div>
           <QRCodeForm />
