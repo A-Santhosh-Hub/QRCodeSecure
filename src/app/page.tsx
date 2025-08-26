@@ -1,8 +1,14 @@
 import { QRCodeForm } from '@/components/qr-code-form';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { HistorySheet } from '@/components/history-sheet';
 
 export default function Home() {
   return (
     <div className="bg-background font-body">
+      <header className="absolute top-0 right-0 p-4 flex gap-2">
+        <HistorySheet />
+        <ThemeToggle />
+      </header>
       <main className="flex min-h-screen flex-col items-center p-4 sm:p-8 md:p-12">
         <div className="w-full max-w-4xl py-8">
           <div className="text-center mb-10">

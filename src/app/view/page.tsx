@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ShieldCheck, ShieldOff, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 function ViewQrCodeContent() {
   const searchParams = useSearchParams();
@@ -27,7 +28,9 @@ function ViewQrCodeContent() {
             setUserPassword(passwordMatch[1]);
             setData(decodedString.substring(passwordMatch[0].length));
         } else {
+            // Data might not be password protected
             setData(decodedString);
+            setIsAuthenticated(true); // No password, so grant access
         }
       } catch (e) {
         console.error('Failed to decode data:', e);
@@ -51,7 +54,7 @@ function ViewQrCodeContent() {
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === 'Admin' || password === userPassword) {
+    if (password.toLowerCase() === 'admin' || password === userPassword) {
       setIsAuthenticated(true);
       toast({
         title: "Access Granted",
@@ -88,7 +91,7 @@ function ViewQrCodeContent() {
     );
   }
   
-  if (!isAuthenticated && userPassword) {
+  if (!isAuthenticated) {
     return (
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="items-center text-center">
@@ -133,6 +136,9 @@ function ViewQrCodeContent() {
 export default function ViewQrCodePage() {
     return (
         <div className="bg-background font-body">
+            <header className="absolute top-0 right-0 p-4">
+                <ThemeToggle />
+            </header>
             <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-8">
                 <Suspense fallback={<Loader2 className="h-12 w-12 animate-spin text-primary" />}>
                     <ViewQrCodeContent />

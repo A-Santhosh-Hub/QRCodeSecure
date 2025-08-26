@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useState, useEffect } from 'react';
+import { useForm, FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import QRCode from 'qrcode';
@@ -59,7 +59,7 @@ const formSections = [
 export function QRCodeForm() {
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [summaryInfo, setSummaryInfo] = useState<{ summary: string } | null>(null);
+  const [summaryInfo, setSummaryInfo] = useState<{ summary: string, values: FormData } | null>(null);
   const { toast } = useToast();
 
   const form = useForm<FormData>({
@@ -83,7 +83,7 @@ export function QRCodeForm() {
     },
   });
 
-  const generateQRCode = async (data: string) => {
+  const generateQRCode = async (data: string, values: FormData) => {
     try {
       const encodedData = btoa(unescape(encodeURIComponent(data)));
       const urlToEncode = `${window.location.origin}/view?data=${encodedData}`;
@@ -96,6 +96,7 @@ export function QRCodeForm() {
         }
       });
       setQrCodeUrl(dataUrl);
+      saveToHistory(dataUrl, values);
     } catch (error) {
       console.error('QR Code Generation Error:', error);
       toast({
@@ -105,6 +106,20 @@ export function QRCodeForm() {
       });
     }
   };
+
+  const saveToHistory = (qrCodeUrl: string, formData: FormData) => {
+    if (typeof window === 'undefined') return;
+    const newItem = {
+        id: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
+        qrCodeUrl,
+        formData
+    };
+    const storedHistory = localStorage.getItem('qrCodeHistory');
+    const history = storedHistory ? JSON.parse(storedHistory) : [];
+    history.unshift(newItem);
+    localStorage.setItem('qrCodeHistory', JSON.stringify(history.slice(0, 50))); // Limit history size
+  }
 
   const formatDataToString = (data: FormData): string => {
     return `Password: ${data.password}
@@ -135,7 +150,7 @@ Additional Info: ${data.otherInfo || 'N/A'}`;
     if (formattedData.length > 2000) {
         const result = await getSummary(formattedData);
         if (result.success && result.data) {
-            setSummaryInfo({ summary: result.data.summary });
+            setSummaryInfo({ summary: result.data.summary, values });
         } else {
             toast({
                 variant: "destructive",
@@ -146,11 +161,19 @@ Additional Info: ${data.otherInfo || 'N/A'}`;
             return;
         }
     } else {
-        await generateQRCode(formattedData);
+        await generateQRCode(formattedData, values);
     }
     
     setIsLoading(false);
   };
+  
+  const onFormError = (errors: FieldErrors<FormData>) => {
+    toast({
+        variant: "destructive",
+        title: "Incomplete Form",
+        description: "Please fill out all the required fields before generating the QR code.",
+    });
+  }
 
   const handleDownload = () => {
     if (!qrCodeUrl) return;
@@ -169,7 +192,7 @@ Additional Info: ${data.otherInfo || 'N/A'}`;
       <Card className="w-full max-w-4xl mx-auto shadow-lg">
         <CardContent className="p-0">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(onSubmit, onFormError)} className="space-y-8">
               <Tabs defaultValue="personal" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6 h-auto">
                     {formSections.map((section) => (
@@ -373,7 +396,7 @@ Additional Info: ${data.otherInfo || 'N/A'}`;
             <AlertDialogCancel>Edit Manually</AlertDialogCancel>
             <AlertDialogAction onClick={() => {
                 if (summaryInfo) {
-                    generateQRCode(summaryInfo.summary);
+                    generateQRCode(summaryInfo.summary, summaryInfo.values);
                 }
             }}>Use Summary</AlertDialogAction>
           </AlertDialogFooter>
