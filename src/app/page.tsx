@@ -1,6 +1,7 @@
 import { QRCodeForm } from '@/components/qr-code-form';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { HistorySheet } from '@/components/history-sheet';
+import Link from 'next/link';
 
 export default function Home() {
   return (
@@ -23,7 +24,7 @@ export default function Home() {
         </div>
       </main>
       <footer className="w-full text-center text-muted-foreground p-4">
-        <p>Developed by SANTHOSH_A</p>
+        <p>Developed by SANTHOSH_A | <Link href="/admin" className="text-primary hover:underline">Admin Panel</Link></p>
       </footer>
     </div>
   );

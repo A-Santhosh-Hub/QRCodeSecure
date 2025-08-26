@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ShieldCheck, ShieldOff, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/theme-toggle';
+import Link from 'next/link';
 
 const ADMIN_PASSWORD = '1922K1396s*';
 
@@ -147,7 +148,7 @@ export default function ViewQrCodePage() {
                 </Suspense>
             </main>
              <footer className="w-full text-center text-muted-foreground p-4">
-                <p>Developed by SANTHOSH_A</p>
+                 <p>Developed by SANTHOSH_A | <Link href="/admin" className="text-primary hover:underline">Admin Panel</Link></p>
             </footer>
         </div>
     );
