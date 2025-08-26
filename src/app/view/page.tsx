@@ -9,6 +9,8 @@ import { ShieldCheck, ShieldOff, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/theme-toggle';
 
+const ADMIN_PASSWORD = '007124';
+
 function ViewQrCodeContent() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -54,7 +56,7 @@ function ViewQrCodeContent() {
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.toLowerCase() === 'admin' || password === userPassword) {
+    if (password === ADMIN_PASSWORD || password === userPassword) {
       setIsAuthenticated(true);
       toast({
         title: "Access Granted",
