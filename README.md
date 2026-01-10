@@ -34,4 +34,4 @@ QRCode Secure is a web app that lets users fill in personal details and generate
 
 ### 📸 Preview
 
-![ QRCode Secure — Password Protected QR Generator](https://github.com/A-Santhosh-Hub/My-Blender-3D-Models/blob/main/as/Screenshot%202026-01-10%20142949.png)
+![ QRCode Secure — Password Protected QR Generator](https://github.com/A-Santhosh-Hub/QRCodeSecure/blob/main/Screenshot%202026-01-10%20143853.png)
