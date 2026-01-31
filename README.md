@@ -22,7 +22,7 @@ QRCode Secure is a web app that lets users fill in personal details and generate
 4. Click **Generate QR Code**  
 5. Share the secure QR code with others
 
-----
+-----
 
 ### 🛠️ Built With
 
